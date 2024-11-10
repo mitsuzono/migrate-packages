@@ -33,4 +33,4 @@ while read row; do
 
   # docker push
   docker push $image_name
-done < packages.csv
+done < $csv_path
