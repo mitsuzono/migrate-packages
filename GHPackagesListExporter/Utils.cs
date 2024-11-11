@@ -11,7 +11,7 @@ namespace GHPackagesListExporter
             httpClient.DefaultRequestHeaders.Add("Accept", "application/vnd.github+json");
             httpClient.DefaultRequestHeaders.Add("User-Agent", "localhost");
             httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {pat}");
-            var url = $"https://api.github.com/orgs/{org}/packages?package_type={packageType}";
+            var url = $"https://api.github.com/orgs/{org}/packages?package_type={packageType}&per_page=100";
             Console.WriteLine($"Getting packages from {url}");
             using var response = await httpClient.GetAsync(url);
             if (!response.IsSuccessStatusCode)
@@ -37,7 +37,7 @@ namespace GHPackagesListExporter
             httpClient.DefaultRequestHeaders.Add("Accept", "application/vnd.github+json");
             httpClient.DefaultRequestHeaders.Add("User-Agent", "localhost");
             httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {pat}");
-            var url = $"https://api.github.com/orgs/{org}/packages/{packageType}/{packageName}/versions";
+            var url = $"https://api.github.com/orgs/{org}/packages/{packageType}/{packageName}/versions?per_page=100";
             Console.WriteLine($"Getting package versions from {url}");
             using var response = await httpClient.GetAsync(url);
             if (!response.IsSuccessStatusCode)
