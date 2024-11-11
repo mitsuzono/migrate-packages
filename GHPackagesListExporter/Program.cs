@@ -1,4 +1,5 @@
 ﻿using GHPackagesListExporter;
+using System.Web;
 
 var org = args[0]; //"YOUR_ORG_NAME";
 var pat = args[1]; //"ghp_xxx";
@@ -10,7 +11,8 @@ foreach (var packageType in packageTypes)
     var packages = await Utils.GetPackages(org, packageType, pat);
     foreach (var package in packages)
     {
-        var versions = await Utils.GetPackageVersions(org, packageType, package.name, pat);
-        await Utils.OutputCsv($"{packageType}_{package.name}.csv", versions);
+        var encodedPackageName = HttpUtility.UrlEncode(package.name);
+        var versions = await Utils.GetPackageVersions(org, packageType, encodedPackageName, pat);
+        await Utils.OutputCsv($"{packageType}_{encodedPackageName}.csv", versions);
     }
 }
