@@ -11,10 +11,24 @@ namespace GHPackagesListExporter
             httpClient.DefaultRequestHeaders.Add("Accept", "application/vnd.github+json");
             httpClient.DefaultRequestHeaders.Add("User-Agent", "localhost");
             httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {pat}");
-            using var response = await httpClient.GetAsync($"https://api.github.com/orgs/{org}/packages?package_type={packageType}");
+            var url = $"https://api.github.com/orgs/{org}/packages?package_type={packageType}";
+            Console.WriteLine($"Getting packages from {url}");
+            using var response = await httpClient.GetAsync(url);
+            if (!response.IsSuccessStatusCode)
+            {
+                Console.WriteLine($"Failed to get packages: {response.StatusCode}");
+                return new List<PackagesPayload.Package>();
+            }
+
             var content = await response.Content.ReadAsStringAsync();
+            if (string.IsNullOrWhiteSpace(content) || !content.StartsWith('['))
+            {
+                Console.WriteLine("No packages found");
+                return new List<PackagesPayload.Package>();
+            }
+
             var packages = JsonSerializer.Deserialize<PackagesPayload>($"{{\"packages\":{content}}}");
-            return packages?.packages;
+            return packages?.packages ?? new List<PackagesPayload.Package>();
         }
 
         public static async Task<IList<PackageVersionsPayload.PackageVersion>> GetPackageVersions(string org, string packageType, string packageName, string pat)
@@ -23,14 +37,28 @@ namespace GHPackagesListExporter
             httpClient.DefaultRequestHeaders.Add("Accept", "application/vnd.github+json");
             httpClient.DefaultRequestHeaders.Add("User-Agent", "localhost");
             httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {pat}");
-            using var response = await httpClient.GetAsync($"https://api.github.com/orgs/{org}/packages/{packageType}/{packageName}/versions");
+            var url = $"https://api.github.com/orgs/{org}/packages/{packageType}/{packageName}/versions";
+            Console.WriteLine($"Getting package versions from {url}");
+            using var response = await httpClient.GetAsync(url);
+            if (!response.IsSuccessStatusCode)
+            {
+                Console.WriteLine($"Failed to get package versions: {response.StatusCode}");
+                return new List<PackageVersionsPayload.PackageVersion>();
+            }
+
             var content = await response.Content.ReadAsStringAsync();
+            if (string.IsNullOrWhiteSpace(content) || !content.StartsWith('['))
+            {
+                Console.WriteLine("No package versions found");
+                return new List<PackageVersionsPayload.PackageVersion>();
+            }
             var versions = JsonSerializer.Deserialize<PackageVersionsPayload>($"{{\"versions\":{content}}}");
-            return versions?.versions.OrderBy(v => v.created_at).ToList();
+            return versions?.versions.OrderBy(v => v.created_at).ToList() ?? new List<PackageVersionsPayload.PackageVersion>();
         }
 
         public static async Task OutputCsv(string path, IList<PackageVersionsPayload.PackageVersion> versions)
         {
+            Console.WriteLine($"Writing to file {path}");
             using var writer = new StreamWriter(path, false, Encoding.UTF8);
             foreach (var version in versions)
             {
