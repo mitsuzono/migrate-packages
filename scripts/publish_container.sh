@@ -13,7 +13,7 @@ export CR_PAT=$pat
 echo $CR_PAT | docker login ghcr.io -u $user --password-stdin
 
 while read row; do
-  echo $row
+  echo "row: ${row}"
 
   id=`echo ${row} | cut -d , -f 1`
   tag=`echo ${row} | cut -d , -f 2`
@@ -21,6 +21,12 @@ while read row; do
   # created_at=`echo ${row} | cut -d , -f 4`
   commit_id=`echo ${row} | cut -d , -f 5`
   dockerfile_path=`echo ${row} | cut -d , -f 6`
+
+  # 移行元Packagesのtag値が空であればスキップ
+  if [ -z "$tag" ]; then
+    echo "skip: source package tag is empty"
+    continue
+  fi
 
   image_name=ghcr.io/$new_org/$new_package_name:$tag
   echo "${image_name}"
