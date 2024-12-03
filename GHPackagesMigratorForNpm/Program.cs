@@ -2,12 +2,13 @@
 
 var sourceOrg = args[0]; //"YOUR_SOURCE_ORG_NAME";
 var packageName = args[1]; //"YOUR_PACKAGE_NAME";
-var pat = args[2]; //"ghp_xxx";
+var sourcePat = args[2]; //"ghp_xxx";
 var targetOrg = args[3]; //"YOUR_TARGET_ORG_NAME";
 var targetRepo = args[4]; //"YOUR_TARGET_REPO_NAME";
+var targetPat = args[5]; //"ghp_xxx";
 
 // Get all package versions
-var packagesNode = await Utils.GetNpmPackageVersionsAsync(sourceOrg, packageName, pat);
+var packagesNode = await Utils.GetNpmPackageVersionsAsync(sourceOrg, packageName, sourcePat);
 
 var sortedTimes = packagesNode["packages"]!["time"]!.AsObject().OrderBy(r => r.Value!.GetValue<DateTime>());
 foreach (var item in sortedTimes)
@@ -17,7 +18,7 @@ foreach (var item in sortedTimes)
     var fileName = $"{sourceOrg}_{packageName}_{versionItem.Key}.tgz";
 
     // Download tarball
-    await Utils.DownloadTarballAsync(versionItem.Value["dist"]!["tarball"]!.GetValue<string>(), pat, fileName);
+    await Utils.DownloadTarballAsync(versionItem.Value["dist"]!["tarball"]!.GetValue<string>(), sourcePat, fileName);
 
     // to base64
     var bytes = File.ReadAllBytes(fileName);
@@ -42,5 +43,5 @@ foreach (var item in sortedTimes)
         base64,
         bytes.Length.ToString());
     Console.WriteLine($"putContent: {putContent}");
-    await Utils.PutNpmPackageAsync(targetOrg, packageName, versionItem.Key, pat, putContent);
+    await Utils.PutNpmPackageAsync(targetOrg, packageName, versionItem.Key, targetPat, putContent);
 }
