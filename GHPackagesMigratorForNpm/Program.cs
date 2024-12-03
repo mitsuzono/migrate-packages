@@ -9,13 +9,15 @@ var targetRepo = args[4]; //"YOUR_TARGET_REPO_NAME";
 // Get all package versions
 var packagesNode = await Utils.GetNpmPackageVersionsAsync(sourceOrg, packageName, pat);
 
-foreach (var item in packagesNode["packages"]!["versions"]!.AsObject())
+var sortedTimes = packagesNode["packages"]!["time"]!.AsObject().OrderBy(r => r.Value!.GetValue<DateTime>());
+foreach (var item in sortedTimes)
 {
     Console.WriteLine($"version: {item!.Key}");
-    var fileName = $"{sourceOrg}_{packageName}_{item.Key}.tgz";
+    var versionItem = packagesNode["packages"]!["versions"]!.AsObject().Where(r => r.Key == item.Key).FirstOrDefault();
+    var fileName = $"{sourceOrg}_{packageName}_{versionItem.Key}.tgz";
 
     // Download tarball
-    await Utils.DownloadTarballAsync(item.Value["dist"]!["tarball"]!.GetValue<string>(), pat, fileName);
+    await Utils.DownloadTarballAsync(versionItem.Value["dist"]!["tarball"]!.GetValue<string>(), pat, fileName);
 
     // to base64
     var bytes = File.ReadAllBytes(fileName);
@@ -25,20 +27,20 @@ foreach (var item in packagesNode["packages"]!["versions"]!.AsObject())
     var putContent = Utils.CreatePutNpmPackagePayload(
         targetOrg,
         packageName,
-        item.Key,
+        versionItem.Key,
         targetRepo,
-        item.Value["main"]!.GetValue<string>(),
-        item.Value["scripts"]!["test"]!.GetValue<string>(),
-        item.Value["author"]!["name"]!.GetValue<string>(),
-        item.Value["license"]!.GetValue<string>(),
-        item.Value["readme"]!.GetValue<string>(),
-        item.Value["gitHead"]!.GetValue<string>(),
-        item.Value["_nodeVersion"]!.GetValue<string>(),
-        item.Value["_npmVersion"]!.GetValue<string>(),
-        item.Value["dist"]!["integrity"]!.GetValue<string>(),
-        item.Value["dist"]!["shasum"]!.GetValue<string>(),
+        versionItem.Value["main"]!.GetValue<string>(),
+        versionItem.Value["scripts"]!["test"]!.GetValue<string>(),
+        versionItem.Value["author"]!["name"]!.GetValue<string>(),
+        versionItem.Value["license"]!.GetValue<string>(),
+        versionItem.Value["readme"]!.GetValue<string>(),
+        versionItem.Value["gitHead"]!.GetValue<string>(),
+        versionItem.Value["_nodeVersion"]!.GetValue<string>(),
+        versionItem.Value["_npmVersion"]!.GetValue<string>(),
+        versionItem.Value["dist"]!["integrity"]!.GetValue<string>(),
+        versionItem.Value["dist"]!["shasum"]!.GetValue<string>(),
         base64,
         bytes.Length.ToString());
     Console.WriteLine($"putContent: {putContent}");
-    await Utils.PutNpmPackageAsync(targetOrg, packageName, item.Key, pat, putContent);
+    await Utils.PutNpmPackageAsync(targetOrg, packageName, versionItem.Key, pat, putContent);
 }
