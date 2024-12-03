@@ -59,6 +59,8 @@ namespace GHPackagesMigratorForNpm
             if (!response.IsSuccessStatusCode)
             {
                 Console.WriteLine($"Failed to upload to npm: {response.StatusCode}");
+                var responseContent = await response.Content.ReadAsStringAsync();
+                Console.WriteLine($"errorResponse: {responseContent}");
                 return;
             }
         }
