@@ -110,7 +110,7 @@ namespace GHPackagesMigratorForNpm
             + $"        \"registry\": \"https://npm.pkg.github.com\""
             + $"      }},"
             + $"      \"_id\": \"@{org}/{packageName}@{version}\","
-            + $"      \"readme\": \"{readme}\","
+            + $"      \"readme\": \"\"," // TODO エスケープして代入
             //+ $"      \"readmeFilename\": \"\","
             + $"      \"gitHead\": \"{gitHead}\","
             + $"      \"bugs\": {{"
