@@ -1,10 +1,46 @@
 ﻿using System.Text;
+using System.Text.Json;
 using System.Text.Json.Nodes;
 
 namespace GHPackagesMigratorForNpm
 {
     public static class Utils
     {
+        public static async Task<IList<string>> GetLinkedPackageNamesAsync(string org, string repo, string pat)
+        {
+            var packages = await GetNpmPackagesAsync(org, pat);
+            return packages
+                .Where(p => p.repository.name == repo)
+                .Select(p => p.name)
+                .ToList();
+        }
+
+        private static async Task<IList<NpmPackagesPayload.NpmPackage>> GetNpmPackagesAsync(string org, string pat)
+        {
+            var httpClient = new HttpClient();
+            httpClient.DefaultRequestHeaders.Add("Accept", "application/vnd.github+json");
+            httpClient.DefaultRequestHeaders.Add("User-Agent", "localhost");
+            httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {pat}");
+            var url = $"https://api.github.com/orgs/{org}/packages?package_type=npm&per_page=100";
+            Console.WriteLine($"Getting npm packages from: {url}");
+            using var response = await httpClient.GetAsync(url);
+            if (!response.IsSuccessStatusCode)
+            {
+                Console.WriteLine($"Failed to get packages: {response.StatusCode}");
+                return new List<NpmPackagesPayload.NpmPackage>();
+            }
+
+            var content = await response.Content.ReadAsStringAsync();
+            if (string.IsNullOrWhiteSpace(content) || !content.StartsWith('['))
+            {
+                Console.WriteLine("No packages found");
+                return new List<NpmPackagesPayload.NpmPackage>();
+            }
+
+            var packages = JsonSerializer.Deserialize<NpmPackagesPayload>($"{{\"packages\":{content}}}");
+            return packages?.packages ?? new List<NpmPackagesPayload.NpmPackage>();
+        }
+
         public static async Task<JsonNode> GetNpmPackageVersionsAsync(string org, string packageName, string pat)
         {
             var httpClient = new HttpClient();
