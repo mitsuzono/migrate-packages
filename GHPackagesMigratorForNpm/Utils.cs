@@ -132,7 +132,7 @@ namespace GHPackagesMigratorForNpm
             //+ $"      \"description\": \"\","
             + $"      \"main\": \"{main}\","
             + $"      \"scripts\": {{"
-            + $"        \"test\": \"echo \\\"Error: no test specified\\\" && exit 1\"" // TODO エスケープして代入
+            + $"        \"test\": \"{test?.Replace("\"", "\\\"")}\""
             + $"      }},"
             + $"      \"author\": {{"
             + $"        \"name\": \"{author}\""
