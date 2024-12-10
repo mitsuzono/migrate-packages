@@ -146,7 +146,7 @@ namespace GHPackagesMigratorForNpm
             + $"        \"registry\": \"https://npm.pkg.github.com\""
             + $"      }},"
             + $"      \"_id\": \"@{org}/{packageName}@{version}\","
-            + $"      \"readme\": \"{readme?.Replace("\r", "\\r").Replace("\n", "\\n")}\","
+            + $"      \"readme\": \"{readme?.Replace("\r", "\\r").Replace("\n", "\\n").Replace("\"", "\\\"")}\","
             //+ $"      \"readmeFilename\": \"\","
             + $"      \"gitHead\": \"{gitHead}\","
             + $"      \"bugs\": {{"
