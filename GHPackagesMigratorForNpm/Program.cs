@@ -1,11 +1,21 @@
 ﻿using GHPackagesMigratorForNpm;
+using Microsoft.Extensions.Configuration;
 
-var sourceOrg = args[0]; //"YOUR_SOURCE_ORG_NAME";
-var sourceRepo = args[1]; //"YOUR_SOURCE_REPO_NAME";
-var sourcePat = args[2]; //"ghp_xxx";
-var targetOrg = args[3]; //"YOUR_TARGET_ORG_NAME";
-var targetRepo = args[4]; //"YOUR_TARGET_REPO_NAME";
-var targetPat = args[5]; //"ghp_xxx";
+IConfigurationRoot config = new ConfigurationBuilder()
+    .AddJsonFile("appsettings.json")
+    .Build();
+var option = config.GetSection("GitHub").Get<GitHubOption>();
+if (option == null)
+{
+    Console.WriteLine("GitHubOption(appsettings.json) is not configured");
+    return;
+}
+var sourceOrg = option.SourceOrg;
+var sourceRepo = option.SourceRepo;
+var sourcePat = option.SourcePat;
+var targetOrg = option.TargetOrg;
+var targetRepo = option.TargetRepo;
+var targetPat = option.TargetPat;
 
 // Get package names linked to sourceRepo
 var packageNames = await Utils.GetLinkedPackageNamesAsync(sourceOrg, sourceRepo, sourcePat);
